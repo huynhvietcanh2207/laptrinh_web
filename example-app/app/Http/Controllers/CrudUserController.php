@@ -106,14 +106,35 @@ class CrudUserController extends Controller
     /**
      * Delete user by id
      */
+    // public function deleteUser(Request $request)
+    // {
+    //     $user_id = $request->get('id');
+    //     $user = User::destroy($user_id);
+
+    //     return redirect("list")->withSuccess('Bạn đã xóa thành công!!');
+    // }
     public function deleteUser(Request $request)
     {
         $user_id = $request->get('id');
-        $user = User::destroy($user_id);
-    
-        return redirect("list")->withSuccess('Bạn đã xóa thành công!!');
-    }
 
+        //kiểm ta có bài viết post không
+        $user = User::findOrFail($user_id);
+        if ($user->posts()->exists()) {
+            // nếu có thì ko xóa đc
+            // return redirect()->back()->with('error', 'Không thể xóa người dùng có bài viết.');
+            return response()->json(['error' => 'k the xoa'], 422);
+        }
+        //kiểm ta có bài viết favorites không
+        if ($user->favorities()->exists()) {
+            return redirect()->back()->with('error', 'Không thể xóa người dùng có sở thích.');
+        }
+        
+        // nếu ko thì xóa oke
+        $user->delete();
+        // User::destroy($user_id);
+
+        return redirect("list")->with('success', 'Bạn đã xóa người dùng thành công.');
+    }
     /**
      * Form update user page
      */
@@ -129,40 +150,40 @@ class CrudUserController extends Controller
      * Submit form update user
      */
     public function postUpdateUser(Request $request)
-{
-    // lấy input từ request
-    $input = $request->all();
+    {
+        // lấy input từ request
+        $input = $request->all();
 
-    $request->validate([
-        'name' => 'required',
-        'email' => 'required|email|unique:users,email,' . $input['id'],
-        'password' => 'required|min:6',
-        'phone_number' => 'nullable|numeric',
-        'profile_image' => 'nullable|image',
-    ]);
+        $request->validate([
+            'name' => 'required',
+            'email' => 'required|email|unique:users,email,' . $input['id'],
+            'password' => 'required|min:6',
+            'phone_number' => 'nullable|numeric',
+            'profile_image' => 'nullable|image',
+        ]);
 
-    $user = User::find($input['id']);
+        $user = User::find($input['id']);
 
-    // update user
-    $user->name = $input['name'];
-    $user->email = $input['email'];
-    $user->password = $input['password'];
-    $user->phone_number = $input['phone_number'];
+        // update user
+        $user->name = $input['name'];
+        $user->email = $input['email'];
+        $user->password = $input['password'];
+        $user->phone_number = $input['phone_number'];
 
-    // kiểm tra tải lên hình ảnh chưa ấy
-    if ($request->hasFile('profile_image')) {
-        //ghi dữ liệu ở database ấy vào cột 'profile_image'
-        $imageContent = file_get_contents($request->file('profile_image')->path());
-        $user->profile_image = $imageContent; // Sửa lại tên cột thành 'profile_image'
+        // kiểm tra tải lên hình ảnh chưa ấy
+        if ($request->hasFile('profile_image')) {
+            //ghi dữ liệu ở database ấy vào cột 'profile_image'
+            $imageContent = file_get_contents($request->file('profile_image')->path());
+            $user->profile_image = $imageContent; // Sửa lại tên cột thành 'profile_image'
+        }
+
+        // Lưu 
+        $user->save();
+
+        return redirect("list")->withSuccess('Update thanh cong');
     }
 
-    // Lưu 
-    $user->save();
 
-    return redirect("list")->withSuccess('Update thanh cong');
-}
-
-    
 
 
     /**

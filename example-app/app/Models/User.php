@@ -7,7 +7,12 @@ use Illuminate\Notifications\Notifiable;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-
+use Illuminate\Database\Eloquent\Relations\HasOne; // Import class HasOne
+use Illuminate\Database\Eloquent\Relations\HasMany; // Import class HasMany
+use Illuminate\Database\Eloquent\Relations\BelongsToMany; // Import class BelongsToMany
+use App\Models\Profile; // Import model Profile
+use App\Models\Posts; // Import model Posts
+use App\Models\Favorities; // Import model Favorities
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -51,4 +56,30 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+     /**
+     * Relationship one to one
+     * @return HasOne
+     */
+    public function profile(): HasOne
+    {
+        return $this->hasOne(Profile::class);
+    }
+
+    /**
+     * Relationship one to many
+     * @return HasMany
+     */
+    public function posts(): HasMany
+    {
+        return $this->hasMany(Posts::class);
+    }
+
+    /**
+     * Relationship many to many
+     * @return BelongsToMany
+     */
+    public function favorities(): BelongsToMany
+    {
+        return $this->belongsToMany(Favorities::class, 'user_favorite', 'user_id', 'favorite_id');
+    }
 }
